@@ -1,0 +1,16 @@
+from src.analysis.topic_modeler import TopicDiscoveryEngine
+
+def test_topic_modeling():
+    texts = [
+        "AI is transforming technology",
+        "Football is a popular sport",
+        "Government policies affect economy"
+    ]
+
+    topic_model = TopicDiscoveryEngine(num_topics=2)
+    topic_model.fit_topics(texts)
+
+    topics = topic_model.get_topics()
+
+    assert isinstance(topics, dict)
+    assert len(topics) == 2
