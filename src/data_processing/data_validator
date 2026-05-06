@@ -1,1 +1,68 @@
-bhj
+# Apply preprocessing to the dataset
+print("🧹 Preprocessing all articles...")
+
+# Create new columns for processed text
+df['text_clean'] = df['Text'].apply(clean_text)
+#df['content_clean'] = df['content'].apply(clean_text)
+df['text_processed'] = df['Text'].apply(preprocess_text)
+#df['content_processed'] = df['content'].apply(preprocess_text)
+
+# Combine title and content for full article analysis
+#df['full_text'] = df['Text'] + ' ' + df['content']
+#df['full_text_processed'] = df['full_text'].apply(preprocess_text)
+
+df['full_text'] = df['Text']
+df['full_text_processed'] =df['full_text'].apply(preprocess_text)
+
+print("✅ Preprocessing complete!")
+
+# Show before and after examples
+print("\n📝 BEFORE AND AFTER EXAMPLES")
+print("=" * 60)
+for i in range(min(3, len(df))):
+    print(f"\nExample {i+1}:")
+    print(f"Original: {df.iloc[i]['full_text'][:100]}...")
+    print(f"Processed: {df.iloc[i]['full_text_processed'][:100]}...")
+
+# 💡 STUDENT TASK: Analyze the preprocessing results
+# - Calculate average text length before and after
+print("\n📏 AVERAGE TEXT LENGTH")
+print("=" * 50)
+
+# Character length
+avg_before = df['full_text'].astype(str).apply(len).mean()
+avg_after = df['full_text_processed'].astype(str).apply(len).mean()
+
+print(f"Average length BEFORE: {avg_before:.2f} characters")
+print(f"Average length AFTER:  {avg_after:.2f} characters")
+
+
+# - Count unique words before and after
+print("\n🔤 UNIQUE WORD COUNT")
+print("=" * 50)
+
+# Before preprocessing
+words_before = " ".join(df['full_text'].astype(str)).split()
+unique_before = len(set(words_before))
+
+# After preprocessing
+words_after = " ".join(df['full_text_processed'].astype(str)).split()
+unique_after = len(set(words_after))
+
+print(f"Unique words BEFORE: {unique_before}")
+print(f"Unique words AFTER:  {unique_after}")
+
+
+# - Identify the most common words after preprocessing
+from collections import Counter
+
+print("\n🔥 MOST COMMON WORDS (AFTER PREPROCESSING)")
+print("=" * 50)
+
+all_words = " ".join(df['full_text_processed']).split()
+word_counts = Counter(all_words)
+
+top_words = word_counts.most_common(20)
+
+for word, count in top_words:
+    print(f"{word}: {count}")
