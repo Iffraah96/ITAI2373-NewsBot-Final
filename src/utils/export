@@ -1,1 +1,14 @@
-nmn
+import json
+import pandas as pd
+
+class ExportUtils:
+    def export_to_csv(self, dataframe, file_path):
+        dataframe.to_csv(file_path, index=False)
+
+    def export_to_json(self, data, file_path):
+        with open(file_path, "w") as file:
+            json.dump(data, file, indent=4)
+
+    def save_report(self, report_text, file_path):
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(report_text)
