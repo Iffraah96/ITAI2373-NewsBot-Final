@@ -1,1 +1,148 @@
-bvmjh
+# 📊 System Evaluation and Metrics
+
+class NewsBot2Evaluator:
+    """
+    Comprehensive evaluation framework for NewsBot 2.0
+    """
+
+    def __init__(self, newsbot_system):
+        self.newsbot = newsbot_system
+
+    def evaluate_classification_performance(self, test_data):
+        """
+        Evaluate classification accuracy and performance.
+        test_data should be a DataFrame with columns: Text, Category
+        """
+
+        from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+        y_true = []
+        y_pred = []
+
+        for _, row in test_data.iterrows():
+            text = row["Text"]
+            true_label = row["Category"]
+
+            try:
+                result = self.newsbot.classifier.predict_with_confidence(text)
+                predicted_label = result["primary_category"]
+
+                y_true.append(true_label)
+                y_pred.append(predicted_label)
+
+            except Exception as e:
+                print(f"Classification error: {e}")
+
+        return {
+            "accuracy": accuracy_score(y_true, y_pred),
+            "classification_report": classification_report(y_true, y_pred),
+            "confusion_matrix": confusion_matrix(y_true, y_pred)
+        }
+
+    def evaluate_topic_modeling_quality(self, documents):
+        """
+        Basic topic modeling evaluation.
+        """
+
+        try:
+            topics = self.newsbot.topic_engine.visualize_topics()
+
+            topic_diversity = len(
+                set(word for topic_words in topics.values() for word in topic_words)
+            )
+
+            return {
+                "number_of_topics": len(topics),
+                "topic_diversity": topic_diversity,
+                "topics": topics
+            }
+
+        except Exception as e:
+            return {
+                "error": str(e)
+            }
+
+    def evaluate_summarization_quality(self, articles_and_summaries):
+        """
+        Evaluate summarization quality using basic coverage metrics.
+        articles_and_summaries should be a list of tuples:
+        [(original_article, generated_summary), ...]
+        """
+
+        scores = []
+
+        for original, summary in articles_and_summaries:
+            try:
+                score = self.newsbot.summarizer.assess_summary_quality(original, summary)
+                scores.append(score)
+            except Exception as e:
+                scores.append({"error": str(e)})
+
+        return scores
+
+    def evaluate_user_experience(self, user_interactions):
+        """
+        Evaluate conversational interface effectiveness.
+        user_interactions should be a list of user queries.
+        """
+
+        results = []
+
+        for query in user_interactions:
+            try:
+                response = self.newsbot.query_interface(query)
+
+                results.append({
+                    "query": query,
+                    "response": response,
+                    "status": "handled"
+                })
+
+            except Exception as e:
+                results.append({
+                    "query": query,
+                    "response": None,
+                    "status": "failed",
+                    "error": str(e)
+                })
+
+        handled_count = sum(1 for r in results if r["status"] == "handled")
+
+        return {
+            "total_queries": len(user_interactions),
+            "handled_queries": handled_count,
+            "task_completion_rate": handled_count / len(user_interactions) if user_interactions else 0,
+            "details": results
+        }
+
+    def generate_evaluation_report(self):
+        """
+        Generate comprehensive evaluation report.
+        """
+
+        return {
+            "system_name": "NewsBot 2.0",
+            "evaluation_summary": "Evaluation framework checks classification, topic modeling, summarization, and user interaction.",
+            "strengths": [
+                "Uses midterm classifier as foundation",
+                "Adds sentiment, topic modeling, summarization, multilingual processing, and semantic search",
+                "Includes error handling for robust testing"
+            ],
+            "limitations": [
+                "Summarization currently uses extractive fallback",
+                "Real-world news API integration is optional/not fully connected",
+                "Translation quality depends on external services if added later"
+            ],
+            "recommendations": [
+                "Train classifier on more recent news data",
+                "Add real-time news API",
+                "Add stronger summarization model if environment supports it",
+                "Improve multilingual translation with a reliable API"
+            ]
+        }
+
+
+# Set up evaluation framework
+evaluator = NewsBot2Evaluator(newsbot2)
+
+print("📊 Evaluation framework ready for implementation!")
