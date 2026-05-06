@@ -1,1 +1,17 @@
-bnvh
+from src.conversation.intent_classifier import IntentClassifier
+from src.conversation.query_processor import QueryProcessor
+
+class ResponseGenerator:
+    def __init__(self):
+        self.intent_classifier = IntentClassifier()
+        self.query_processor = QueryProcessor()
+
+    def generate_response(self, query):
+        intent = self.intent_classifier.classify_intent(query)
+        processed_query = self.query_processor.process_query(query)
+
+        return {
+            "intent": intent,
+            "processed_query": processed_query,
+            "response": f"NewsBot identified this as a {intent} request."
+        }
