@@ -19,7 +19,7 @@ NewsBot 2.0 is an NLP-based system that analyzes news articles and provides:
    pip install -r requirements.txt
 
 2. Open notebook:
-   notebooks/07_System_Integration.ipynb
+   notebooks/FP_Newsbot2_0_Iffraah_Rehman_ITAI2373.ipynb
 
 3. Run all cells
 
