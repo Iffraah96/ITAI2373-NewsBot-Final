@@ -1,1 +1,126 @@
-vgmhj
+# 🎭 Advanced Sentiment Analysis
+# TODO: Implement sentiment analysis with temporal tracking
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
+import pandas as pd
+import numpy as np
+
+class SentimentEvolutionTracker:
+    """
+    Advanced sentiment analysis with temporal and contextual understanding
+    """
+
+    def __init__(self):
+        self.analyzer = SentimentIntensityAnalyzer()
+
+    def analyze_sentiment(self, article_text):
+        """
+        Comprehensive sentiment analysis using VADER.
+        Returns overall sentiment, confidence score, and emotional dimensions (VADER scores).
+        """
+        vs = self.analyzer.polarity_scores(article_text)
+
+        if vs['compound'] >= 0.05:
+            overall_sentiment = "positive"
+        elif vs['compound'] <= -0.05:
+            overall_sentiment = "negative"
+        else:
+            overall_sentiment = "neutral"
+
+        return {
+            "overall_sentiment": overall_sentiment,
+            "confidence": float(vs['compound']), # Compound score as confidence
+            "vader_scores": vs,
+            "key_phrases_driving_sentiment": "(VADER is lexicon-based, so specific phrases are not directly extracted without further processing)" # Placeholder
+        }
+
+    def track_sentiment_over_time(self, articles_with_dates):
+        """
+        Analyze sentiment trends over time.
+        articles_with_dates = [(text, datetime_object), ...]
+        """
+        records = []
+        for text, date_obj in articles_with_dates:
+            sentiment_result = self.analyze_sentiment(text)
+            records.append({
+                "date": pd.to_datetime(date_obj).date(),
+                "compound_sentiment": sentiment_result["confidence"],
+                "overall_sentiment": sentiment_result["overall_sentiment"]
+            })
+
+        df = pd.DataFrame(records)
+        if df.empty:
+            return pd.DataFrame() # Return empty DataFrame if no data
+
+        # Aggregate by date for daily average sentiment
+        daily_sentiment = df.groupby('date')['compound_sentiment'].mean().reset_index()
+        daily_sentiment.set_index('date', inplace=True)
+        daily_sentiment.sort_index(inplace=True)
+
+        return daily_sentiment
+
+    def detect_sentiment_anomalies(self, sentiment_timeline_df, window_size=7, threshold_std=2):
+        """
+        Identify unusual sentiment patterns.
+        sentiment_timeline_df is a DataFrame with 'date' as index and 'compound_sentiment' column.
+        """
+        if sentiment_timeline_df.empty or 'compound_sentiment' not in sentiment_timeline_df.columns:
+            return pd.DataFrame() # Return empty DataFrame if no data or wrong column
+
+        # Calculate rolling mean and standard deviation
+        rolling_mean = sentiment_timeline_df['compound_sentiment'].rolling(window=window_size).mean()
+        rolling_std = sentiment_timeline_df['compound_sentiment'].rolling(window=window_size).std()
+
+        # Calculate upper and lower bounds for anomalies
+        upper_bound = rolling_mean + (rolling_std * threshold_std)
+        lower_bound = rolling_mean - (rolling_std * threshold_std)
+
+        # Identify anomalies
+        anomalies = sentiment_timeline_df[
+            (sentiment_timeline_df['compound_sentiment'] > upper_bound) |
+            (sentiment_timeline_df['compound_sentiment'] < lower_bound)
+        ]
+
+        return anomalies
+
+# TODO: Test your sentiment tracker
+if __name__ == "__main__":
+    sentiment_tracker = SentimentEvolutionTracker()
+
+    print("\n--- Testing analyze_sentiment ---")
+    text1 = "This is a fantastic product! I love it."
+    text2 = "The situation is terrible and very disappointing."
+    text3 = "The report provides a neutral analysis of the market."
+
+    print(f"Sentiment for \"{text1}\": {sentiment_tracker.analyze_sentiment(text1)}")
+    print(f"Sentiment for \"{text2}\": {sentiment_tracker.analyze_sentiment(text2)}")
+    print(f"Sentiment for \"{text3}\": {sentiment_tracker.analyze_sentiment(text3)}")
+
+    print("\n--- Testing track_sentiment_over_time and detect_sentiment_anomalies ---")
+    from datetime import datetime, timedelta
+
+    articles_data = [
+        ("Markets are up today, good news for investors.", datetime(2023, 10, 1)),
+        ("A new policy was announced, mixed reactions.", datetime(2023, 10, 2)),
+        ("Economy shows strong growth, very positive outlook.", datetime(2023, 10, 3)),
+        ("Political unrest causes some concern.", datetime(2023, 10, 4)),
+        ("Technology stock soared to new highs, excellent performance.", datetime(2023, 10, 5)),
+        ("Inflation concerns grow, market feels uneasy.", datetime(2023, 10, 6)),
+        ("Major breakthrough in medical research! Incredible!", datetime(2023, 10, 7)),
+        ("Unexpected bad economic data released.", datetime(2023, 10, 8)), # Potential anomaly
+        ("Recovery efforts are slow, challenging times ahead.", datetime(2023, 10, 9)),
+        ("Optimistic forecasts for next quarter's earnings.", datetime(2023, 10, 10)),
+        ("Another crisis looms, terrible news.", datetime(2023, 10, 11)), # Potential anomaly
+        ("Government takes decisive action, positive for stability.", datetime(2023, 10, 12)),
+    ]
+
+    sentiment_timeline = sentiment_tracker.track_sentiment_over_time(articles_data)
+    print("\nDaily Sentiment Timeline:")
+    print(sentiment_timeline)
+
+    anomalies = sentiment_tracker.detect_sentiment_anomalies(sentiment_timeline)
+    print("\nDetected Sentiment Anomalies:")
+    print(anomalies)
+
+
+print("\n🎭 Sentiment evolution tracker ready for implementation!")
