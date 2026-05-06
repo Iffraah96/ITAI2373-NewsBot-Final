@@ -1,1 +1,132 @@
+# Create TF-IDF vectorizer
+# 💡 TIP: Experiment with different parameters:
+# - max_features: limit vocabulary size
+# - ngram_range: include phrases (1,1) for words, (1,2) for words+bigrams
+# - min_df: ignore terms that appear in less than min_df documents
+# - max_df: ignore terms that appear in more than max_df fraction of documents
 
+tfidf_vectorizer = TfidfVectorizer(
+    max_features=5000,  # Limit vocabulary for computational efficiency
+    ngram_range=(1, 2),  # Include unigrams and bigrams
+    min_df=2,  # Ignore terms that appear in less than 2 documents
+    max_df=0.8  # Ignore terms that appear in more than 80% of documents
+)
+
+# Fit and transform the processed text
+print("🔢 Creating TF-IDF features...")
+tfidf_matrix = tfidf_vectorizer.fit_transform(df['full_text_processed'])
+feature_names = tfidf_vectorizer.get_feature_names_out()
+
+print(f"✅ TF-IDF matrix created!")
+print(f"📊 Shape: {tfidf_matrix.shape}")
+print(f"📝 Vocabulary size: {len(feature_names)}")
+print(f"🔢 Sparsity: {(1 - tfidf_matrix.nnz / (tfidf_matrix.shape[0] * tfidf_matrix.shape[1])) * 100:.2f}%")
+
+# Convert to DataFrame for easier analysis
+tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=feature_names)
+tfidf_df['category'] = df['Category'].values
+
+print("\n🔍 Sample TF-IDF features:")
+print(tfidf_df.iloc[:3, :10])  # Show first 3 rows and 10 features
+
+
+# Analyze most important terms per category
+def get_top_tfidf_terms(category, n_terms=10):
+    """
+    Get top TF-IDF terms for a specific category
+
+    💡 TIP: This function should:
+    - Filter data for the specific category
+    - Calculate mean TF-IDF scores for each term
+    - Return top N terms with highest scores
+    """
+    # 🚥 YOUR CODE HERE: Implement category-specific TF-IDF analysis
+    category_data = tfidf_df[tfidf_df['category'] == category]
+
+    # Calculate mean TF-IDF scores for this category (excluding the category column)
+    mean_scores = category_data.drop('category', axis=1).mean().sort_values(ascending=False)
+
+    return mean_scores.head(n_terms)
+
+# Analyze top terms for each category
+print("🏷️ TOP TF-IDF TERMS BY CATEGORY")
+print("=" * 50)
+
+categories = df['Category'].unique()
+category_terms = {}
+
+for category in categories:
+    top_terms = get_top_tfidf_terms(category, n_terms=10)
+    category_terms[category] = top_terms
+
+    print(f"\n📰 {category.upper()}:")
+    for term, score in top_terms.items():
+        print(f"  {term}: {score:.4f}")
+
+# 💡 STUDENT TASK: Create visualizations for TF-IDF analysis
+# - Word clouds for each category
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Calculate number of words per document
+df['word_count'] = df['Text'].str.split().apply(len)
+
+# Group by category
+category_word_count = df.groupby('Category')['word_count'].sum().sort_values(ascending=False)
+
+# Plot bar chart
+plt.figure(figsize=(10,5))
+sns.barplot(x=category_word_count.index, y=category_word_count.values, palette='viridis')
+plt.title("Total Word Count per Category")
+plt.xlabel("Category")
+plt.ylabel("Word Count")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# - Bar charts of top terms
+import matplotlib.pyplot as plt # Added import for plt
+import pandas as pd
+import seaborn as sns
+
+print("\n📊 BAR CHARTS OF TOP TERMS")
+print("=" * 50)
+
+for category, terms in category_terms.items():
+    plt.figure(figsize=(10, 5))
+
+    terms.sort_values().plot(kind='barh')
+
+    plt.title(f"Top TF-IDF Terms - {category}")
+    plt.xlabel("TF-IDF Score")
+    plt.ylabel("Terms")
+    plt.tight_layout()
+    plt.show()
+
+# - Heatmap of term importance across categories
+
+# Combine all top terms into one set
+all_terms = set()
+for terms in category_terms.values():
+    all_terms.update(terms.index)
+
+# Convert to sorted list (FIX)
+all_terms = sorted(all_terms)
+
+# Create matrix
+heatmap_data = pd.DataFrame(index=categories, columns=all_terms).fillna(0)
+
+for category in categories:
+    for term, score in category_terms[category].items():
+        heatmap_data.loc[category, term] = score
+
+# Plot heatmap
+plt.figure(figsize=(12, 8))
+sns.heatmap(heatmap_data, cmap='viridis')
+
+plt.title("TF-IDF Term Importance Across Categories")
+plt.xlabel("Terms")
+plt.ylabel("Categories")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
