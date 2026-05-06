@@ -1,1 +1,85 @@
-nbn
+class IntelligentSummarizer:
+    """
+    Safe summarizer that works even when summarization pipelines are unavailable.
+    """
+
+    def __init__(self):
+        self.mode = "extractive"
+
+    def summarize_article(self, article_text, summary_type="balanced"):
+        """
+        Generate article summary using extractive summarization.
+        """
+
+        if summary_type == "brief":
+            num_sentences = 2
+        elif summary_type == "detailed":
+            num_sentences = 5
+        else:
+            num_sentences = 3
+
+        return self.extractive_summary(article_text, num_sentences)
+
+    def extractive_summary(self, article_text, num_sentences=3):
+        """
+        Simple sentence-based summary.
+        """
+
+        import nltk
+
+        try:
+            sentences = nltk.sent_tokenize(article_text)
+        except:
+            sentences = article_text.split(".")
+
+        sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
+
+        if not sentences:
+            return "Summary not available."
+
+        return " ".join(sentences[:num_sentences])
+
+    def summarize_multiple_articles(self, articles, focus_topic=None):
+        """
+        Summarize multiple articles together.
+        """
+
+        combined_text = " ".join(articles)
+
+        if focus_topic:
+            combined_text = f"Focus topic: {focus_topic}. " + combined_text
+
+        return self.summarize_article(combined_text, summary_type="detailed")
+
+    def generate_headlines(self, article_text):
+        """
+        Generate simple headlines.
+        """
+
+        summary = self.summarize_article(article_text, "brief")
+
+        first_sentence = summary.split(".")[0]
+
+        return {
+            "informative": first_sentence,
+            "engaging": "Key Update: " + first_sentence,
+            "seo": first_sentence.lower(),
+            "social": first_sentence + " #News"
+        }
+
+    def assess_summary_quality(self, original_text, summary):
+        """
+        Basic summary quality metrics.
+        """
+
+        original_words = set(original_text.lower().split())
+        summary_words = set(summary.lower().split())
+
+        coverage = len(summary_words & original_words) / len(summary_words) if summary_words else 0
+        compression_ratio = len(summary.split()) / len(original_text.split()) if original_text.split() else 0
+
+        return {
+            "coverage_score": coverage,
+            "compression_ratio": compression_ratio,
+            "summary_length": len(summary.split())
+        }
