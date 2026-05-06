@@ -1,1 +1,140 @@
-ghg
+class EntityRelationshipMapper:
+    """
+    Advanced NER with relationship extraction and network analysis
+    """
+
+    def __init__(self):
+        import spacy
+        import networkx as nx
+
+        # 🔹 Load spaCy model
+        self.nlp = spacy.load("en_core_web_sm")
+
+        # 🔹 Knowledge graph
+        self.graph = nx.Graph()
+
+    # -------------------------------
+    # 🧠 Extract Entities
+    # -------------------------------
+
+    def extract_entities(self, article_text):
+        """
+        Extract and classify entities
+        """
+
+        doc = self.nlp(article_text)
+
+        entities = []
+
+        for ent in doc.ents:
+            entities.append({
+                "text": ent.text,
+                "label": ent.label_
+            })
+
+        return entities
+
+    # -------------------------------
+    # 🔗 Extract Relationships
+    # -------------------------------
+
+    def extract_relationships(self, article_text):
+        """
+        Extract relationships using co-occurrence + simple rules
+        """
+
+        doc = self.nlp(article_text)
+        relationships = []
+
+        for sent in doc.sents:
+            ents = [ent.text for ent in sent.ents]
+
+            # 🔹 Co-occurrence relationships
+            for i in range(len(ents)):
+                for j in range(i + 1, len(ents)):
+                    relationships.append({
+                        "source": ents[i],
+                        "target": ents[j],
+                        "type": "co_occurrence"
+                    })
+
+            # 🔹 Rule-based relationships
+            for token in sent:
+                if token.dep_ == "nsubj" and token.head.dep_ == "ROOT":
+                    subject = token.text
+                    verb = token.head.text
+
+                    for child in token.head.children:
+                        if child.dep_ in ["dobj", "attr"]:
+                            obj = child.text
+                            relationships.append({
+                                "source": subject,
+                                "target": obj,
+                                "type": verb
+                            })
+
+        return relationships
+
+    # -------------------------------
+    # 🌐 Build Knowledge Graph
+    # -------------------------------
+
+    def build_knowledge_graph(self, articles):
+        """
+        Build graph from multiple articles
+        """
+
+        for article in articles:
+            relationships = self.extract_relationships(article)
+
+            for rel in relationships:
+                self.graph.add_edge(
+                    rel["source"],
+                    rel["target"],
+                    relationship=rel["type"]
+                )
+
+        return self.graph
+
+    # -------------------------------
+    # 🔍 Find Connections
+    # -------------------------------
+
+    def find_entity_connections(self, entity1, entity2):
+        """
+        Find shortest path between two entities
+        """
+
+        import networkx as nx
+
+        if entity1 not in self.graph or entity2 not in self.graph:
+            return "One or both entities not found in graph."
+
+        try:
+            path = nx.shortest_path(self.graph, entity1, entity2)
+            return path
+        except nx.NetworkXNoPath:
+            return "No connection found."
+
+
+# -------------------------------
+# 🧪 Example Usage
+# -------------------------------
+
+if __name__ == "__main__":
+    mapper = EntityRelationshipMapper()
+
+    text = "Elon Musk is the CEO of Tesla. Tesla is based in the United States."
+
+    print("🧠 Entities:")
+    print(mapper.extract_entities(text))
+
+    print("\n🔗 Relationships:")
+    print(mapper.extract_relationships(text))
+
+    mapper.build_knowledge_graph([text])
+
+    print("\n🔍 Connection (Elon Musk → United States):")
+    print(mapper.find_entity_connections("Elon Musk", "United States"))
+
+print("🕸️ Entity relationship mapper ready for implementation!")
