@@ -1,0 +1,48 @@
+# config/settings.py
+
+import os
+
+# ===============================
+# PROJECT PATHS
+# ===============================
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_DIR = os.path.join(BASE_DIR, "data")
+RAW_DATA_DIR = os.path.join(DATA_DIR, "raw")
+PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processed")
+MODEL_DIR = os.path.join(DATA_DIR, "models")
+RESULTS_DIR = os.path.join(DATA_DIR, "results")
+
+# ===============================
+# MODEL CONFIGURATIONS
+# ===============================
+DEFAULT_CLASSIFIER = "logistic_regression"
+TFIDF_MAX_FEATURES = 5000
+
+# Transformer model (used in summarizer / embeddings)
+TRANSFORMER_MODEL = "distilbert-base-uncased"
+
+# Topic modeling
+NUM_TOPICS = 5
+
+# ===============================
+# MULTILINGUAL SETTINGS
+# ===============================
+SUPPORTED_LANGUAGES = ["en", "es", "fr", "de", "ur"]
+
+# ===============================
+# APPLICATION SETTINGS
+# ===============================
+DEBUG = True
+RANDOM_STATE = 42
+
+# ===============================
+# FILE EXPORT SETTINGS
+# ===============================
+EXPORT_FORMAT = "csv"
+
+# ===============================
+# API KEYS (Loaded from ENV)
+# ===============================
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
