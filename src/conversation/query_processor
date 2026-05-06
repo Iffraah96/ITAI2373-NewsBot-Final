@@ -1,1 +1,11 @@
-nvmjh
+class QueryProcessor:
+    def extract_query_entities(self, query):
+        words = query.split()
+        return [word for word in words if word.istitle()]
+
+    def process_query(self, query):
+        return {
+            "original_query": query,
+            "cleaned_query": query.lower().strip(),
+            "entities": self.extract_query_entities(query)
+        }
