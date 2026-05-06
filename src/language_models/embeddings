@@ -1,1 +1,119 @@
-vgm
+class SemanticSearchEngine:
+    """
+    Advanced semantic search using embeddings and similarity matching
+    """
+
+    def __init__(self):
+        from sentence_transformers import SentenceTransformer
+        from sklearn.metrics.pairwise import cosine_similarity
+
+        # 🔹 Embedding model
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+
+        # Store data
+        self.documents = []
+        self.embeddings = None
+
+        self.cosine_similarity = cosine_similarity
+
+    # -------------------------------
+    # 🧠 Encode Documents
+    # -------------------------------
+
+    def encode_documents(self, documents):
+        """
+        Convert documents into embeddings
+        """
+
+        self.documents = documents
+        self.embeddings = self.model.encode(documents)
+
+    # -------------------------------
+    # 🔎 Find Similar Articles
+    # -------------------------------
+
+    def find_similar_articles(self, query_article, top_k=5):
+        """
+        Find articles similar to a given article
+        """
+
+        query_embedding = self.model.encode([query_article])
+        similarities = self.cosine_similarity(query_embedding, self.embeddings)[0]
+
+        # Get top results
+        top_indices = similarities.argsort()[::-1][:top_k]
+
+        return [
+            (self.documents[i], float(similarities[i]))
+            for i in top_indices
+        ]
+
+    # -------------------------------
+    # 🔍 Semantic Search
+    # -------------------------------
+
+    def semantic_search(self, query_text):
+        """
+        Search articles using natural language query
+        """
+
+        query_embedding = self.model.encode([query_text])
+        similarities = self.cosine_similarity(query_embedding, self.embeddings)[0]
+
+        top_indices = similarities.argsort()[::-1]
+
+        return [
+            (self.documents[i], float(similarities[i]))
+            for i in top_indices
+        ]
+
+    # -------------------------------
+    # 🧩 Cluster Similar Content
+    # -------------------------------
+
+    def cluster_similar_content(self, articles, n_clusters=3):
+        """
+        Group articles by similarity
+        """
+
+        from sklearn.cluster import KMeans
+
+        embeddings = self.model.encode(articles)
+
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        labels = kmeans.fit_predict(embeddings)
+
+        clusters = {}
+
+        for idx, label in enumerate(labels):
+            clusters.setdefault(label, []).append(articles[idx])
+
+        return clusters
+
+
+# -------------------------------
+# 🧪 Example Usage
+# -------------------------------
+
+if __name__ == "__main__":
+    articles = [
+        "AI is transforming the technology industry",
+        "Stock markets are experiencing volatility",
+        "New regulations impact tech companies",
+        "Economic growth is slowing globally",
+        "Advances in artificial intelligence continue"
+    ]
+
+    search_engine = SemanticSearchEngine()
+    search_engine.encode_documents(articles)
+
+    print("🔎 Similar Articles:")
+    print(search_engine.find_similar_articles("AI is growing rapidly"))
+
+    print("\n🔍 Semantic Search:")
+    print(search_engine.semantic_search("technology and AI"))
+
+    print("\n🧩 Clusters:")
+    print(search_engine.cluster_similar_content(articles))
+
+print("🔍 Semantic search engine ready for implementation!")
